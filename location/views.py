@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import Location
+from .serializers import LocationSerializer
 
-# Create your views here.
+
+class LocationViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Location.objects.all().order_by('id')
+    serializer_class = LocationSerializer

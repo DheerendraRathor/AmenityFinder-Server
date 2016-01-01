@@ -14,9 +14,34 @@ Including another URLconf
     2. Import the include() function: from django.conf.urls import url, include
     3. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from django.conf.urls import url
+import re
+
+import rest_framework_swagger.urls
+from django.conf import settings
+from django.conf.urls import url, include
 from django.contrib import admin
+from django.views.static import serve
+from rest_framework.routers import DefaultRouter
+
+from amenity.views import AmenityViewSet
+from location.views import LocationViewSet
+
+router = DefaultRouter()
+router.register('amenity', AmenityViewSet)
+router.register('location', LocationViewSet)
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^api/', include(router.urls)),
+    url(r'^api-docs/', include(rest_framework_swagger.urls, namespace='api-docs')),
+]
+
+# Fail safe! If nginx is down, this might come handy.
+urlpatterns += [
+    url(r'^%s(?P<path>.*)$' % re.escape(settings.STATIC_URL.lstrip('/')), serve,
+        kwargs={
+            'document_root': settings.STATIC_ROOT,
+        }
+        ),
+    url(r'^%s(?P<path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')), serve),
 ]
