@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'simple_history',
     'post',
     'location',
+    'core',
+    'account',
 ]
 
 MIDDLEWARE_CLASSES = [

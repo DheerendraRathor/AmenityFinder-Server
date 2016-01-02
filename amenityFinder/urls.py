@@ -24,9 +24,11 @@ from django.views.static import serve
 from rest_framework.routers import DefaultRouter
 
 from location.views import LocationViewSet
+from post.views import PostViewSet
 
 router = DefaultRouter()
 router.register('location', LocationViewSet)
+router.register('post', PostViewSet)
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),

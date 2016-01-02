@@ -6,10 +6,10 @@ from django.contrib.auth.models import User
 class Post(models.Model):
     location = models.ForeignKey(Location, related_name='posts')
     comment = models.TextField()
-    rating = models.IntegerField()
+    rating = models.FloatField()
     user = models.ForeignKey(User, related_name='posts')
     is_anonymous = models.BooleanField()
-    upvotes = models.ManyToManyField(User, related_name='upvoted_posts')
-    downvotes = models.ManyToManyField(User, related_name='downvoted_posts')
+    upvotes = models.ManyToManyField(User, related_name='upvoted_posts', blank=True)
+    downvotes = models.ManyToManyField(User, related_name='downvoted_posts', blank=True)
     created = models.DateTimeField(auto_now_add=True)
 

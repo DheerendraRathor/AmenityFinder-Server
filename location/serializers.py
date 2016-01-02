@@ -7,7 +7,8 @@ class LocationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Location
-        fields = ['id', 'latitude', 'longitude', 'name', 'is_free', 'rating', 'user', 'male', 'female', 'flag_count']
+        fields = ['id', 'latitude', 'longitude', 'name', 'is_free', 'rating', 'user', 'male', 'female', 'flag_count',
+                  'created']
 
 
 class BBoxSerializer(serializers.Serializer):
@@ -15,4 +16,3 @@ class BBoxSerializer(serializers.Serializer):
     long_min = serializers.FloatField(min_value=-180.0, max_value=180.0)
     lat_max = serializers.FloatField(min_value=-90.0, max_value=90.0)
     long_max = serializers.FloatField(min_value=-180.0, max_value=180.0)
-
