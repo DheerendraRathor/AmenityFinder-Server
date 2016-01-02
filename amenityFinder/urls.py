@@ -23,11 +23,9 @@ from django.contrib import admin
 from django.views.static import serve
 from rest_framework.routers import DefaultRouter
 
-from amenity.views import AmenityViewSet
 from location.views import LocationViewSet
 
 router = DefaultRouter()
-router.register('amenity', AmenityViewSet)
 router.register('location', LocationViewSet)
 
 urlpatterns = [
