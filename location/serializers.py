@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import Location
 
 
@@ -7,8 +8,8 @@ class LocationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Location
-        fields = ['id', 'latitude', 'longitude', 'name', 'is_free', 'rating', 'user', 'male', 'female', 'flag_count',
-                  'created']
+        fields = ['id', 'latitude', 'longitude', 'name', 'is_free', 'rating', 'user', 'male', 'female', 'is_anonymous',
+                  'flag_count', 'created']
 
 
 class BBoxSerializer(serializers.Serializer):
@@ -17,6 +18,7 @@ class BBoxSerializer(serializers.Serializer):
     lat_max = serializers.FloatField(min_value=-90.0, max_value=90.0)
     long_max = serializers.FloatField(min_value=-180.0, max_value=180.0)
 
+
 class NewLocationSerializer(serializers.Serializer):
     latitude = serializers.FloatField(min_value=-90.0, max_value=90.0)
     longitude = serializers.FloatField(min_value=-180.0, max_value=180.0)
@@ -24,3 +26,4 @@ class NewLocationSerializer(serializers.Serializer):
     is_free = serializers.BooleanField()
     male = serializers.BooleanField()
     female = serializers.BooleanField()
+    is_anonymous = serializers.BooleanField()

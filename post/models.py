@@ -1,6 +1,7 @@
-from django.db import models
-from location.models import Location
 from django.contrib.auth.models import User
+from django.db import models
+
+from location.models import Location
 
 
 class Post(models.Model):
@@ -12,4 +13,3 @@ class Post(models.Model):
     upvotes = models.ManyToManyField(User, related_name='upvoted_posts', blank=True)
     downvotes = models.ManyToManyField(User, related_name='downvoted_posts', blank=True)
     created = models.DateTimeField(auto_now_add=True)
-

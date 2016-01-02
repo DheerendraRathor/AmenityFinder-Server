@@ -13,8 +13,9 @@ class Location (models.Model):
     male = models.BooleanField(default=True)
     female = models.BooleanField(default=True)
     flags = models.ManyToManyField(User, related_name='flagged_locations', blank=True)
-    _history_ = HistoricalRecords()
     created = models.DateTimeField(auto_now_add=True)
+    is_anonymous = models.BooleanField(default=True)
+    _history_ = HistoricalRecords()
 
     def __str__(self):
         return self.name

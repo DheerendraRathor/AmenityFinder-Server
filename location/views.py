@@ -1,20 +1,17 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import list_route, detail_route
-from rest_framework.pagination import CursorPagination
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from post.serializers import PostSerializer
+from core.pagination import DefaultCursorPagination
+from core.mixins import SerializerClassRequestContextMixin
 from .models import Location
 from .serializers import LocationSerializer, BBoxSerializer, NewLocationSerializer
 
 
-class DefaultCursorPagination(CursorPagination):
-    page_size = 20
-
-
-class LocationViewSet(viewsets.ModelViewSet):
+class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
     queryset = Location.objects.all().order_by('rating')
     serializer_class = LocationSerializer
 
@@ -33,19 +30,26 @@ class LocationViewSet(viewsets.ModelViewSet):
             min_long = serialized_data.validated_data['long_min']
             max_long = serialized_data.validated_data['long_max']
             data = self.get_queryset().filter(latitude__range=[min_lat, max_lat], longitude__range=[min_long, max_long])
-            locations = self.serializer_class(data, many=True)
+            locations = self.get_context_serializer_class(self.serializer_class, data, many=True)
             return Response(locations.data)
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
 
     @detail_route(pagination_class=DefaultCursorPagination)
     def get_posts(self, request, pk):
+        """
+        Get paginated posts of a location id
+        ---
+        response_serializer: PostSerializer
+        """
         loc = get_object_or_404(Location, pk=pk)
         loc_posts = loc.posts.all()
         posts = self.paginate_queryset(loc_posts)
-        posts = PostSerializer(posts, many=True)
+        posts = self.get_context_serializer_class(PostSerializer, posts, many=True)
         return self.get_paginated_response(posts.data)
 
+    # TODO: Add authentication
+    # TODO: Nearby location validation
     def create(self, request, *args, **kwargs):
         """
         Creates a new location.
@@ -62,14 +66,12 @@ class LocationViewSet(viewsets.ModelViewSet):
                 is_free=serialized_data.validated_data['is_free'],
                 male=serialized_data.validated_data['male'],
                 female=serialized_data.validated_data['female'],
+                is_anonymous=serialized_data.validated_data['is_anonymous'],
+                user=request.user,
             )
 
             location.save()
 
-            return Response(self.get_serializer_class(location))
+            return Response(self.serializer_class(location))
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
-
-
-
-
