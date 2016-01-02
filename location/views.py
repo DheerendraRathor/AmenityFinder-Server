@@ -1,12 +1,19 @@
 from rest_framework import viewsets
 from .models import Location
 from .serializers import LocationSerializer, BBoxSerializer
-from rest_framework.decorators import list_route
+from rest_framework.decorators import list_route, detail_route
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
+from django.shortcuts import get_object_or_404
+from post.serializers import PostSerializer
+from rest_framework.pagination import CursorPagination
 
 
-class LocationViewSet(viewsets.ReadOnlyModelViewSet):
+class DefaultCursorPagination(CursorPagination):
+    page_size = 20
+
+
+class LocationViewSet(viewsets.ModelViewSet):
     queryset = Location.objects.all().order_by('rating')
     serializer_class = LocationSerializer
 
@@ -29,4 +36,14 @@ class LocationViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(locations.data)
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
+
+    @detail_route(pagination_class=DefaultCursorPagination)
+    def get_posts(self, request, pk):
+        loc = get_object_or_404(Location, pk=pk)
+        loc_posts = loc.posts.all()
+        posts = self.paginate_queryset(loc_posts)
+        posts = PostSerializer(posts, many=True)
+        return self.get_paginated_response(posts.data)
+
+
 
