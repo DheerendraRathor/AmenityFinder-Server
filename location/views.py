@@ -2,20 +2,26 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django.http import HttpResponseForbidden
 
 from post.serializers import PostSerializer
 from core.pagination import DefaultCursorPagination
 from core.mixins import SerializerClassRequestContextMixin
 from .models import Location
-from .serializers import LocationSerializer, BBoxSerializer, NewLocationSerializer
+from .serializers import LocationSerializer, BBoxSerializer, NewLocationSerializer, UpdateLocationSerializer
 
 
 class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
     queryset = Location.objects.all().order_by('rating')
     serializer_class = LocationSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
-    @list_route(methods=['POST'])
+    def list(self, request, *args, **kwargs):
+        return HttpResponseForbidden()
+
+    @list_route(methods=['POST'], permission_classes=[])
     def search_by_bbox(self, request):
         """
         Get locations by BBox
@@ -31,7 +37,7 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
             max_long = serialized_data.validated_data['long_max']
             data = self.get_queryset().filter(latitude__range=[min_lat, max_lat], longitude__range=[min_long, max_long])
             locations = self.get_context_serializer_class(self.serializer_class, data, many=True)
-            return Response(locations.data)
+            return Response({'results': locations.data})
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
 
@@ -48,7 +54,6 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
         posts = self.get_context_serializer_class(PostSerializer, posts, many=True)
         return self.get_paginated_response(posts.data)
 
-    # TODO: Add authentication
     # TODO: Nearby location validation
     def create(self, request, *args, **kwargs):
         """
@@ -75,3 +80,69 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
             return Response(self.serializer_class(location))
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
+
+    @detail_route(methods=['POST'])
+    def flag_post(self, request, pk):
+        """
+        Remove vote if present.
+        ---
+        parameters_strategy:
+            form: replace
+        """
+        location = self.get_object()
+        location.flags.add(request.user)
+        return Response(self.get_context_serializer_class(LocationSerializer, location).data)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Update the location; can update lat, long, name, is_free, male, female, is_anonymous
+        ---
+        request_serializer: location.serializers.UpdateLocationSerializer
+        response_serializer: location.serializers.LocationSerializer
+        """
+        serialized_data = UpdateLocationSerializer(data=request.data)
+        location = self.get_object()
+
+        if location.user != request.user:
+            return Response({'success': False, 'message': 'Unauthorized access'}, status=HTTP_403_FORBIDDEN)
+        else:
+            if serialized_data.is_valid():
+                try:
+                    location.latitude = serialized_data.validated_data['latitude']
+                except KeyError:
+                    pass
+
+                try:
+                    location.longitude = serialized_data.validated_data['longitude']
+                except KeyError:
+                    pass
+
+                try:
+                    location.name = serialized_data.validated_data['name']
+                except KeyError:
+                    pass
+
+                try:
+                    location.is_free = serialized_data.validated_data['is_free']
+                except KeyError:
+                    pass
+
+                try:
+                    location.male = serialized_data.validated_data['male']
+                except KeyError:
+                    pass
+
+                try:
+                    location.female = serialized_data.validated_data['female']
+                except KeyError:
+                    pass
+
+                try:
+                    location.is_anonymous = serialized_data.validated_data['is_anonymous']
+                except KeyError:
+                    pass
+
+                location.save()
+                return Response(self.get_context_serializer_class(LocationSerializer, location).data)
+            else:
+                return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)

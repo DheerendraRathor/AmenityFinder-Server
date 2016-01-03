@@ -25,10 +25,12 @@ from rest_framework.routers import DefaultRouter
 
 from location.views import LocationViewSet
 from post.views import PostViewSet
+from account.views import AccountViewSet
 
 router = DefaultRouter()
-router.register('location', LocationViewSet)
-router.register('post', PostViewSet)
+router.register('location', LocationViewSet, base_name='location')
+router.register('post', PostViewSet, base_name='post')
+router.register('account', AccountViewSet, base_name='account')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),

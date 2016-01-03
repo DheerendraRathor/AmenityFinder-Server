@@ -29,4 +29,9 @@ class NewPostSerializer(serializers.Serializer):
     rating = serializers.FloatField(min_value=0.0, max_value=5.0)
     is_anonymous = serializers.BooleanField()
 
+class UpdatePostSerializer(serializers.Serializer):
+    comment = serializers.CharField(required=False)
+    rating = serializers.FloatField(min_value=0.0, max_value=5.0, required=False)
+    is_anonymous = serializers.BooleanField(required=False)
+
 

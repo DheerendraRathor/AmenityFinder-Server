@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from simple_history.models import HistoricalRecords
 
 
-class Location (models.Model):
+class Location(models.Model):
     latitude = models.FloatField(db_index=True)
     longitude = models.FloatField(db_index=True)
     name = models.CharField(max_length=64)
@@ -15,6 +15,7 @@ class Location (models.Model):
     flags = models.ManyToManyField(User, related_name='flagged_locations', blank=True)
     created = models.DateTimeField(auto_now_add=True)
     is_anonymous = models.BooleanField(default=True)
+    rating_count = models.IntegerField(default=0)
     _history_ = HistoricalRecords()
 
     def __str__(self):
