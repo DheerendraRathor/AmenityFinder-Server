@@ -4,8 +4,8 @@ from simple_history.models import HistoricalRecords
 
 
 class Location(models.Model):
-    latitude = models.FloatField(db_index=True)
-    longitude = models.FloatField(db_index=True)
+    latitude = models.DecimalField(db_index=True, decimal_places=4, max_digits=7)
+    longitude = models.DecimalField(db_index=True, decimal_places=4, max_digits=8)
     name = models.CharField(max_length=64)
     is_free = models.BooleanField(default=True)
     rating = models.FloatField(default=0.0)

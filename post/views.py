@@ -23,26 +23,28 @@ class PostViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
         """
         serialized_data = NewPostSerializer(data=request.data)
         if serialized_data.is_valid():
+            post = Post.objects.filter(user=request.user, location=serialized_data.validated_data['location'])
+            if post.exists():
+                post = post[0]
+            else:
+                post = Post.objects.create(
+                        location=serialized_data.validated_data['location'],
+                        comment=serialized_data.validated_data['comment'],
+                        rating=serialized_data.validated_data['rating'],
+                        is_anonymous=serialized_data.validated_data['is_anonymous'],
+                        user=request.user,
+                )
 
-            post = Post.objects.create(
-                    location=serialized_data.validated_data['location'],
-                    comment=serialized_data.validated_data['comment'],
-                    rating=serialized_data.validated_data['rating'],
-                    is_anonymous=serialized_data.validated_data['is_anonymous'],
-                    user=request.user,
-            )
+                post.save()
 
-            post.save()
+                this_location = post.location
+                new_rating = this_location.rating * this_location.rating_count + serialized_data.validated_data['rating']
+                new_rating /= (this_location.rating_count + 1)
+                this_location.rating_count += 1
+                this_location.rating = new_rating
 
-            this_location = post.location
-            new_rating = this_location.rating * this_location.rating_count + serialized_data.validated_data['rating']
-            new_rating /= (this_location.rating_count + 1)
-            this_location.rating_count += 1
-            this_location.rating = new_rating
-
-            this_location.save()
-
-            return Response(self.serializer_class(post))
+                this_location.save()
+            return Response(self.serializer_class(post).data)
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
 
@@ -105,7 +107,15 @@ class PostViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
                     pass
 
                 try:
+                    old_rating = post.rating
+
                     post.rating = serialized_data.validated_data['rating']
+
+                    this_location = post.location
+                    new_rating = this_location.rating*this_location.rating_count - old_rating + post.rating
+                    new_rating /= this_location.rating_count
+                    this_location.rating = new_rating
+                    this_location.save()
                 except KeyError:
                     pass
 

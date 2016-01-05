@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from core.serializers import UserSerializer
 from .models import Post
+from location.models import Location
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -24,7 +25,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class NewPostSerializer(serializers.Serializer):
-    location = serializers.IntegerField()
+    location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all())
     comment = serializers.CharField()
     rating = serializers.FloatField(min_value=0.0, max_value=5.0)
     is_anonymous = serializers.BooleanField()

@@ -3,13 +3,14 @@ from rest_framework import viewsets
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.http import HttpResponseForbidden
 
 from post.serializers import PostSerializer
 from core.pagination import DefaultCursorPagination
 from core.mixins import SerializerClassRequestContextMixin
 from .models import Location
+from post.models import Post
 from .serializers import LocationSerializer, BBoxSerializer, NewLocationSerializer, UpdateLocationSerializer
 
 
@@ -41,6 +42,21 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
 
+    @detail_route(permission_classes=[IsAuthenticated])
+    def current_post(self, request, pk):
+        """
+        Get user's current location
+        ---
+        """
+        location = get_object_or_404(Location, pk=pk)
+        post = Post.objects.filter(user=request.user, location=location)
+        if post.exists():
+            data = post[0]
+            post = self.get_context_serializer_class(PostSerializer, data)
+            return Response({'success': True, 'result': post.data})
+        else:
+            return Response({'success': False, 'result': None})
+
     @detail_route(pagination_class=DefaultCursorPagination)
     def get_posts(self, request, pk):
         """
@@ -54,7 +70,6 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
         posts = self.get_context_serializer_class(PostSerializer, posts, many=True)
         return self.get_paginated_response(posts.data)
 
-    # TODO: Nearby location validation
     def create(self, request, *args, **kwargs):
         """
         Creates a new location.
@@ -63,19 +78,24 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
         """
         serialized_data = NewLocationSerializer(data=request.data)
         if serialized_data.is_valid():
+            lat_check = float('%.4f' % serialized_data.validated_data['latitude'])
+            long_check = float('%.4f' % serialized_data.validated_data['longitude'])
+            location = Location.objects.filter(latitude=lat_check, longitude=long_check)
+            if location.exists():
+                location = location[0]
+            else:
+                location = Location.objects.create(
+                    latitude=serialized_data.validated_data['latitude'],
+                    longitude=serialized_data.validated_data['longitude'],
+                    name=serialized_data.validated_data['name'],
+                    is_free=serialized_data.validated_data['is_free'],
+                    male=serialized_data.validated_data['male'],
+                    female=serialized_data.validated_data['female'],
+                    is_anonymous=serialized_data.validated_data['is_anonymous'],
+                    user=request.user,
+                )
 
-            location = Location.objects.create(
-                latitude=serialized_data.validated_data['latitude'],
-                longitude=serialized_data.validated_data['longitude'],
-                name=serialized_data.validated_data['name'],
-                is_free=serialized_data.validated_data['is_free'],
-                male=serialized_data.validated_data['male'],
-                female=serialized_data.validated_data['female'],
-                is_anonymous=serialized_data.validated_data['is_anonymous'],
-                user=request.user,
-            )
-
-            location.save()
+                location.save()
 
             return Response(self.serializer_class(location).data)
         else:
