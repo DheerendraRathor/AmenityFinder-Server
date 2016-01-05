@@ -1,10 +1,12 @@
+import facebook
+from django.contrib.auth.models import User
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
-from .serializers import LoginSerializer
-from django.contrib.auth import authenticate
 from rest_framework.response import Response
-from .models import UserToken
 from rest_framework.status import HTTP_400_BAD_REQUEST
+
+from .models import UserToken
+from .serializers import LoginSerializer
 
 
 class AccountViewSet(viewsets.GenericViewSet):
@@ -21,17 +23,33 @@ class AccountViewSet(viewsets.GenericViewSet):
         if serialized_data.is_valid():
             access_token = serialized_data.validated_data['access_token']
 
-            # user = authenticate(access_token='1234567890')
-            # TODO: Add Facebook auth
-            if access_token!='1234567890':
+            graph = facebook.GraphAPI(access_token=access_token, version='2.5')
+
+            try:
+                fb_user = graph.get_object('me?fields=id,first_name,last_name,picture,email')
+            except facebook.GraphAPIError:
                 return Response({'success': False, 'error': 'Invalid token'}, status=HTTP_400_BAD_REQUEST)
-            else:
-                usertoken = UserToken.objects.create(username='root')
-                return Response(
+
+            user, created = User.objects.get_or_create(username=fb_user['id'])
+            if created:
+                user.set_unusable_password()
+
+            user.first_name = fb_user['first_name']
+            user.last_name = fb_user['last_name']
+            user.profile.picture = fb_user['picture']['data']['url']
+
+            if 'email' in fb_user:
+                user.email = fb_user['email']
+
+            user.save()
+            user.profile.save()
+
+            user_token = UserToken.objects.create(user=user)
+            return Response(
                     {
                         'success': True,
-                        'token': usertoken.token.hex
+                        'token': user_token.token.hex
                     }
-                )
-        return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
+            )
 
+        return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
