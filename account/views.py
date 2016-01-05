@@ -5,7 +5,7 @@ from rest_framework.decorators import list_route
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from .models import UserToken
+from .models import UserToken, UserProfile
 from .serializers import LoginSerializer
 
 
@@ -33,6 +33,7 @@ class AccountViewSet(viewsets.GenericViewSet):
             user, created = User.objects.get_or_create(username=fb_user['id'])
             if created:
                 user.set_unusable_password()
+                UserProfile.objects.create(user=user)
 
             user.first_name = fb_user['first_name']
             user.last_name = fb_user['last_name']

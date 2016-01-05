@@ -9,7 +9,7 @@ from core.methods import file_uploader
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
-    picture = models.ImageField(upload_to=file_uploader)
+    picture = models.URLField()
 
     def __str__(self):
         return self.user.username

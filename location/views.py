@@ -77,7 +77,7 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
 
             location.save()
 
-            return Response(self.serializer_class(location))
+            return Response(self.serializer_class(location).data)
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
 

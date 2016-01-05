@@ -23,10 +23,11 @@ class NewLocationSerializer(serializers.Serializer):
     latitude = serializers.FloatField(min_value=-90.0, max_value=90.0)
     longitude = serializers.FloatField(min_value=-180.0, max_value=180.0)
     name = serializers.CharField()
-    is_free = serializers.BooleanField()
-    male = serializers.BooleanField()
-    female = serializers.BooleanField()
-    is_anonymous = serializers.BooleanField()
+    is_free = serializers.BooleanField(default=True)
+    male = serializers.BooleanField(default=True)
+    female = serializers.BooleanField(default=True)
+    is_anonymous = serializers.BooleanField(default=True)
+
 
 class UpdateLocationSerializer(serializers.Serializer):
     latitude = serializers.FloatField(min_value=-90.0, max_value=90.0, required=False)
