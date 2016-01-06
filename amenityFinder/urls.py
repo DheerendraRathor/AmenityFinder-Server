@@ -24,12 +24,13 @@ from django.views.static import serve
 from rest_framework.routers import DefaultRouter
 
 from location.views import LocationViewSet
-from post.views import PostViewSet
+from post.views import PostViewSet, PictureViewSet
 from account.views import AccountViewSet
 
 router = DefaultRouter()
 router.register('location', LocationViewSet, base_name='location')
 router.register('post', PostViewSet, base_name='post')
+router.register('picture', PictureViewSet, base_name='picture')
 router.register('account', AccountViewSet, base_name='account')
 
 urlpatterns = [

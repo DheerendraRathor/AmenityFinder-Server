@@ -6,11 +6,11 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.http import HttpResponseForbidden
 
-from post.serializers import PostSerializer
+from post.serializers import PostSerializer, PictureSerializer
 from core.pagination import DefaultCursorPagination
 from core.mixins import SerializerClassRequestContextMixin
 from .models import Location
-from post.models import Post
+from post.models import Post, Picture
 from .serializers import LocationSerializer, BBoxSerializer, NewLocationSerializer, UpdateLocationSerializer
 
 
@@ -69,6 +69,19 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
         posts = self.paginate_queryset(loc_posts)
         posts = self.get_context_serializer_class(PostSerializer, posts, many=True)
         return self.get_paginated_response(posts.data)
+
+    @detail_route(pagination_class=DefaultCursorPagination)
+    def get_pictures(self, request, pk):
+        """
+        Get paginated pictures of a location id
+        ---
+        response_serializer: PictureSerializer
+        """
+        loc = get_object_or_404(Location, pk=pk)
+        loc_pics = loc.picture.all()
+        pictures = self.paginate_queryset(loc_pics)
+        pictures = self.get_context_serializer_class(PictureSerializer, pictures, many=True)
+        return self.get_paginated_response(pictures.data)
 
     def create(self, request, *args, **kwargs):
         """

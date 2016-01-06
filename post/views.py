@@ -6,8 +6,9 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
 
 from core.mixins import SerializerClassRequestContextMixin
-from .models import Post
+from .models import Post, Picture
 from .serializers import PostSerializer, NewPostSerializer, UpdatePostSerializer
+from .serializers import PictureSerializer, NewPictureSerializer
 
 
 class PostViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
@@ -128,3 +129,43 @@ class PostViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
                 return Response(self.get_context_serializer_class(PostSerializer, post).data)
             else:
                 return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
+
+
+class PictureViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
+    queryset = Picture.objects.all()
+    serializer_class = PictureSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create New Picture for the location
+        ---
+        request_serializer: NewPictureSerializer
+        """
+        serialized_data = NewPictureSerializer(data=request.data)
+        if serialized_data.is_valid():
+            picture = Picture.objects.create(
+                    location=serialized_data.validated_data['location'],
+                    photo=serialized_data.validated_data['photo'],
+                    is_anonymous=serialized_data.validated_data['is_anonymous'],
+                    user=request.user,
+            )
+
+            picture.save()
+            return Response(self.serializer_class(picture).data)
+        else:
+            return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Remove picture.
+        ---
+        parameters_strategy:
+            form: replace
+        """
+        picture = self.get_object()
+        if request.user is picture.user:
+            picture.delete()
+            return Response({'status': 'Delete Successful'})
+        else:
+            return HttpResponseForbidden()
