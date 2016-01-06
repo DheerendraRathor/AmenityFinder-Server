@@ -46,5 +46,9 @@ urlpatterns += [
             'document_root': settings.STATIC_ROOT,
         }
         ),
-    url(r'^%s(?P<path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')), serve),
+    url(r'^%s(?P<path>.*)$' % re.escape(settings.MEDIA_URL.lstrip('/')), serve,
+        kwargs={
+            'document_root': settings.MEDIA_ROOT,
+        }
+        ),
 ]

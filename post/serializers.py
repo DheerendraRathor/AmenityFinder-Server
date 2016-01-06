@@ -1,8 +1,15 @@
+import base64
+import binascii
+import uuid
+
+import django.utils.six
+from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from core.serializers import UserSerializer
-from .models import Post, Picture
 from location.models import Location
+from .models import Post, Picture
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -55,8 +62,21 @@ class PictureSerializer(serializers.ModelSerializer):
         fields = ['id', 'location', 'photo', 'user', 'is_anonymous', 'flags', 'created']
 
 
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, django.utils.six.string_types):
+            try:
+                decoded_data = base64.b64decode(data)
+            except (TypeError, binascii.Error):
+                raise ValidationError(_("Please upload a valid file"))
+
+            name = uuid.uuid4()
+            data = ContentFile(decoded_data, name=name.urn[9:] + '.jpg')
+        return super(Base64ImageField, self).to_internal_value(data)
+
+
 class NewPictureSerializer(serializers.Serializer):
     location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all())
-    photo = serializers.ImageField()
+    photo = Base64ImageField()
     is_anonymous = serializers.BooleanField()
 
