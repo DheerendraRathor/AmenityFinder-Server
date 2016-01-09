@@ -67,7 +67,7 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
         loc = get_object_or_404(Location, pk=pk)
         loc_posts = loc.posts.all()
         posts = self.paginate_queryset(loc_posts)
-        posts = self.get_context_serializer_class(PostSerializer, posts, many=True)
+        posts = PictureSerializer(posts, many=True, context={'request': request})
         return self.get_paginated_response(posts.data)
 
     @detail_route(pagination_class=DefaultCursorPagination)
