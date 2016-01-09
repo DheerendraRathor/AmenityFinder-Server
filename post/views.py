@@ -164,8 +164,9 @@ class PictureViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
             form: replace
         """
         picture = self.get_object()
-        if request.user is picture.user:
+        pid = picture.id
+        if request.user == picture.user:
             picture.delete()
-            return Response({'status': 'Delete Successful'})
+            return Response({'status': 'Delete Successful', 'id': pid})
         else:
             return HttpResponseForbidden()
