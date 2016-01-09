@@ -49,7 +49,8 @@ class AccountViewSet(viewsets.GenericViewSet):
             return Response(
                     {
                         'success': True,
-                        'token': user_token.token.hex
+                        'token': user_token.token.hex,
+                        'uid': User.objects.get(email=user.email).pk,
                     }
             )
 
