@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 
 class UserSerializer(serializers.ModelSerializer):
-    picture = serializers.ImageField(source='profile.picture')
+    picture = serializers.URLField(source='profile.picture')
 
     class Meta:
         model = User
