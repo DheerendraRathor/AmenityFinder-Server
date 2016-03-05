@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from .models import UserToken, UserProfile
-from .serializers import LoginSerializer
+from .serializers import LoginSerializer, UserProfileSerializer
 
 
 class AccountViewSet(viewsets.GenericViewSet):
@@ -55,3 +55,8 @@ class AccountViewSet(viewsets.GenericViewSet):
             )
 
         return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserProfileSerializer
+    queryset = UserProfile.objects.all()

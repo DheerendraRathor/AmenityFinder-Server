@@ -25,7 +25,7 @@ from rest_framework.routers import DefaultRouter
 
 from location.views import LocationViewSet
 from post.views import PostViewSet, PictureViewSet
-from account.views import AccountViewSet
+from account.views import AccountViewSet, UserViewSet
 from .views import index
 
 router = DefaultRouter()
@@ -33,6 +33,7 @@ router.register('location', LocationViewSet, base_name='location')
 router.register('post', PostViewSet, base_name='post')
 router.register('picture', PictureViewSet, base_name='picture')
 router.register('account', AccountViewSet, base_name='account')
+router.register('user', UserViewSet, base_name='user')
 
 urlpatterns = [
     url(r'^$', index, name='index'),

@@ -7,9 +7,27 @@ from django.utils import timezone
 from core.methods import file_uploader
 
 
+class UserLevels:
+    LEVEL_BEGINNER = 1
+    LEVEL_INTERMEDIATE = 2
+    LEVEL_ADVANCED = 3
+    LEVEL_TRUSTED = 4
+    LEVEL_SUPER = 5
+
+    @classmethod
+    def options(cls):
+        return ((cls.LEVEL_BEGINNER, 'Beginner'), (cls.LEVEL_INTERMEDIATE, 'Intermediate'),
+                (cls.LEVEL_ADVANCED, 'Advanced'), (cls.LEVEL_TRUSTED, 'Trusted'), (cls.LEVEL_SUPER, 'Super'))
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile')
     picture = models.URLField()
+    plus_points = models.IntegerField(default=0, blank=True, null=True)
+    minus_points = models.IntegerField(default=0, blank=True, null=True)
+    user_level = models.IntegerField(default=UserLevels.LEVEL_BEGINNER, blank=True, null=True,
+                                     choices=UserLevels.options())
+    ban = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.user.username

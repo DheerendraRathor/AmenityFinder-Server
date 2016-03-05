@@ -79,4 +79,3 @@ class NewPictureSerializer(serializers.Serializer):
     location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all())
     photo = Base64ImageField()
     is_anonymous = serializers.BooleanField()
-
