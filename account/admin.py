@@ -4,7 +4,7 @@ from .models import UserProfile, UserToken
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'picture', 'plus_points', 'minus_points', 'user_level', 'ban']
+    list_display = ['id', 'user', 'picture', 'plus_points', 'minus_points', 'user_level', 'is_banned']
 
 
 @admin.register(UserToken)

@@ -1,3 +1,5 @@
+from django.contrib.auth.models import User
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import list_route, detail_route
@@ -9,8 +11,9 @@ from django.http import HttpResponseForbidden
 from post.serializers import PostSerializer, PictureSerializer
 from core.pagination import DefaultCursorPagination
 from core.mixins import SerializerClassRequestContextMixin
+from core.user_methods import increase_minus_points, decrease_minus_points, decrease_plus_points, increase_plus_points
 from .models import Location
-from post.models import Post, Picture
+from post.models import Post
 from .serializers import LocationSerializer, BBoxSerializer, NewLocationSerializer, UpdateLocationSerializer
 
 
@@ -110,10 +113,14 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
 
                 location.save()
 
+                user = request.user  # type: User
+                increase_plus_points(user, 1)
+
             return Response(self.serializer_class(location).data)
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
 
+    @transaction.atomic
     @detail_route(methods=['POST'])
     def flag_post(self, request, pk):
         """
@@ -123,7 +130,10 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
             form: replace
         """
         location = self.get_object()
-        location.flags.add(request.user)
+        user = location.user  # type: User
+        increase_minus_points(user, 2)
+
+        location.flags.add(user)
         return Response(self.get_context_serializer_class(LocationSerializer, location).data)
 
     def update(self, request, *args, **kwargs):
@@ -176,6 +186,10 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
                     pass
 
                 location.save()
+
+                user = request.user  # type: User
+                increase_plus_points(user, 1)
+
                 return Response(self.get_context_serializer_class(LocationSerializer, location).data)
             else:
                 return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)

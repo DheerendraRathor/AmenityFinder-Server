@@ -27,7 +27,7 @@ class UserProfile(models.Model):
     minus_points = models.IntegerField(default=0, blank=True, null=True)
     user_level = models.IntegerField(default=UserLevels.LEVEL_BEGINNER, blank=True, null=True,
                                      choices=UserLevels.options())
-    ban = models.BooleanField(default=False, blank=True)
+    is_banned = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.user.username

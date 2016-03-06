@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.http import HttpResponseForbidden
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route
@@ -6,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN
 
 from core.mixins import SerializerClassRequestContextMixin
+from core.user_methods import increase_minus_points, decrease_minus_points, decrease_plus_points, increase_plus_points
 from .models import Post, Picture
 from .serializers import PostSerializer, NewPostSerializer, UpdatePostSerializer
 from .serializers import PictureSerializer, NewPictureSerializer
@@ -58,6 +60,10 @@ class PostViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
             form: replace
         """
         post = self.get_object()
+
+        user = post.user  # type: User
+        # TODO: Check if earlier downvoted, then do increase/decrease
+
         post.downvotes.remove(request.user)
         post.upvotes.add(request.user)
         return Response(self.get_context_serializer_class(PostSerializer, post).data)
@@ -71,6 +77,10 @@ class PostViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
             form: replace
         """
         post = self.get_object()
+
+        user = post.user  # type: User
+        # TODO: Check if earlier upvoted, then do increase/decrease
+
         post.upvotes.remove(request.user)
         post.downvotes.add(request.user)
         return Response(self.get_context_serializer_class(PostSerializer, post).data)
