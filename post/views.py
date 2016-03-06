@@ -61,9 +61,6 @@ class PostViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
         """
         post = self.get_object()
 
-        user = post.user  # type: User
-        # TODO: Check if earlier downvoted, then do increase/decrease
-
         post.downvotes.remove(request.user)
         post.upvotes.add(request.user)
         return Response(self.get_context_serializer_class(PostSerializer, post).data)
@@ -77,9 +74,6 @@ class PostViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet):
             form: replace
         """
         post = self.get_object()
-
-        user = post.user  # type: User
-        # TODO: Check if earlier upvoted, then do increase/decrease
 
         post.upvotes.remove(request.user)
         post.downvotes.add(request.user)

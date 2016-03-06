@@ -11,7 +11,6 @@ from django.http import HttpResponseForbidden
 from post.serializers import PostSerializer, PictureSerializer
 from core.pagination import DefaultCursorPagination
 from core.mixins import SerializerClassRequestContextMixin
-from core.user_methods import increase_minus_points, decrease_minus_points, decrease_plus_points, increase_plus_points
 from .models import Location
 from post.models import Post
 from .serializers import LocationSerializer, BBoxSerializer, NewLocationSerializer, UpdateLocationSerializer
@@ -113,9 +112,6 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
 
                 location.save()
 
-                user = request.user  # type: User
-                increase_plus_points(user, 1)
-
             return Response(self.serializer_class(location).data)
         else:
             return Response(serialized_data.errors, status=HTTP_400_BAD_REQUEST)
@@ -131,8 +127,6 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
         """
         location = self.get_object()
         user = location.user  # type: User
-        increase_minus_points(user, 2)
-
         location.flags.add(user)
         return Response(self.get_context_serializer_class(LocationSerializer, location).data)
 
@@ -186,9 +180,6 @@ class LocationViewSet(SerializerClassRequestContextMixin, viewsets.ModelViewSet)
                     pass
 
                 location.save()
-
-                user = request.user  # type: User
-                increase_plus_points(user, 1)
 
                 return Response(self.get_context_serializer_class(LocationSerializer, location).data)
             else:
